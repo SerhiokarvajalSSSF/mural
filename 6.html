@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Mural Interactivo</title>
+    <style>
+        :root {
+            --ice-blue: #A5D8FF;
+            --deep-blue: #1E3A8A;
+            --snow-white: #F9FAFB;
+            --night-blue: #0F172A;
+            --fire-yellow: #FBBF24;
+            --fire-orange: #EA580C;
+            --fire-red: #DC2626;
+            --text-light: #F3F4F6;
+            --matchbox-brown: #8B4513;
+            --matchbox-dark: #5D4037;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, var(--night-blue), #0C1E3A);
+            background-attachment: fixed; /* Mejora de rendimiento */
+            color: var(--text-light);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Contenedor de copos de nieve optimizado */
+        .snowflake-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        /* Header reorganizado con título debajo de imágenes */
+        .header-container {
+            width: 100%;
+            background: rgba(15, 23, 42, 0.8);
+            -webkit-backdrop-filter: blur(5px);
+            backdrop-filter: blur(5px);
+            border-bottom: 1px solid var(--ice-blue);
+            position: relative;
+            z-index: 1;
+            padding: 15px 0;
+        }
+
+        /* Galería de imágenes modificada para una línea horizontal */
+        .images-gallery {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            overflow-x: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--ice-blue) var(--night-blue);
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: 10px;
+        }
+
+        .images-gallery::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .images-gallery::-webkit-scrollbar-thumb {
+            background-color: var(--ice-blue);
+            border-radius: 3px;
+        }
+
+        .images-gallery::-webkit-scrollbar-track {
+            background-color: var(--night-blue);
+        }
+
+        .gallery-item {
+            flex: 0 0 auto;
+            width: 100px;
+            height: 100px;
+            background-color: rgba(15, 23, 42, 0.6);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--ice-blue);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .gallery-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+            border-color: var(--fire-yellow);
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        /* Título movido debajo de las imágenes */
+        .title-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+            margin-top: 10px;
+        }
+
+        .small-logo {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 20px;
+            flex-shrink: 0;
+            box-shadow: 0 0 15px rgba(128, 255, 90, 0.774);
+            background: linear-gradient(to right, var(--ice-blue), var(--ice-blue));
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 2rem;
+            background: linear-gradient(to right, var(--ice-blue), var(--snow-white));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center;
+            font-weight: bold;
+            letter-spacing: 1px;
+            text-shadow: 0 0 10px rgb(0, 143, 252);
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+            position: relative;
+            z-index: 1;
+            overflow-x: auto;
+            padding: 10px 5px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--ice-blue) var(--night-blue);
+            -webkit-overflow-scrolling: touch; /* Mejor scrolling en iOS */
+        }
+
+        .nav-container::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .nav-container::-webkit-scrollbar-thumb {
+            background-color: var(--ice-blue);
+            border-radius: 3px;
+        }
+
+        .nav-container::-webkit-scrollbar-track {
+            background-color: var(--night-blue);
+        }
+
+        .nav-buttons-wrapper {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            gap: 10px;
+        }
+
+        .nav-button {
+            padding: 12px 24px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(30, 58, 138, 0.4);
+            color: var(--text-light);
+            -webkit-backdrop-filter: blur(5px);
+            backdrop-filter: blur(5px);
+            border: 2px solid transparent;
+            white-space: nowrap;
+            flex: 0 0 auto;
+            -webkit-tap-highlight-color: transparent; /* Elimina highlight en móviles */
+        }
+
+        .nav-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            background: rgba(30, 58, 138, 0.6);
+            border-color: var(--ice-blue);
+        }
+
+        .nav-button.active {
+            background: linear-gradient(45deg, var(--fire-orange), var(--fire-yellow));
+            color: var(--night-blue);
+            border: 2px solid var(--fire-red);
+            font-weight: bold;
+            box-shadow: 0 0 15px rgba(251, 191, 36, 0.6);
+            text-shadow: 0 1px 1px rgba(15, 23, 42, 0.3);
+        }
+
+        .content-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        /* Estilo cajetilla de fósforos */
+        .video-container {
+            width: 85%;
+            max-width: 1000px;
+            margin: 20px auto;
+            background: var(--matchbox-dark);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
+            display: none;
+            position: relative;
+            z-index: 1;
+            border: 1px solid var(--matchbox-brown);
+            transition: all 0.3s ease;
+            
+            /* Textura de cajetilla de fósforos */
+            background-image: 
+                linear-gradient(45deg, rgba(139, 69, 19, 0.3) 25%, transparent 25%),
+                linear-gradient(-45deg, rgba(139, 69, 19, 0.3) 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, rgba(139, 69, 19, 0.3) 75%),
+                linear-gradient(-45deg, transparent 75%, rgba(139, 69, 19, 0.3) 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+        }
+
+        .video-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 15px;
+            background: var(--fire-red);
+            border-radius: 8px 8px 0 0;
+        }
+
+        .video-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+            transform: translateY(0);
+            border: 2px solid var(--fire-yellow);
+            box-shadow: 0 0 25px rgba(251, 191, 36, 0.4), 
+                        inset 0 0 15px rgba(234, 88, 12, 0.3);
+        }
+
+        .video-wrapper {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%; /* Default 16:9 */
+            height: 0;
+            overflow: hidden;
+            border-radius: 6px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--fire-orange);
+            background-color: #000; /* Fondo negro para videos */
+        }
+
+        .video-wrapper video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background-color: black;
+        }
+
+        .video-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: var(--fire-yellow);
+            text-align: center;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px 10px;
+            margin-top: 20px;
+            background: rgba(15, 23, 42, 0.8);
+            color: var(--text-light);
+            font-size: 0.9rem;
+            border-top: 1px solid var(--ice-blue);
+            -webkit-backdrop-filter: blur(5px);
+            backdrop-filter: blur(5px);
+            width: 100%;
+        }
+
+        .copyright {
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        /* Elementos flotantes (nieve mejorada) */
+        .snowflake {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: white;
+            border-radius: 50%;
+            filter: blur(2px);
+            opacity: 0.8;
+            animation: falling linear infinite;
+            box-shadow: 0 0 5px rgba(165, 216, 255, 0.8); /* Brillo para resaltar */
+        }
+
+        /* Efecto de partículas de fuego */
+        .fire-particle {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: radial-gradient(circle, var(--fire-yellow), var(--fire-orange));
+            border-radius: 50%;
+            filter: blur(2px);
+            opacity: 0;
+            animation: rising linear infinite;
+        }
+
+        @keyframes falling {
+            0% {
+                transform: translateY(-100vh) rotate(0deg);
+            }
+            100% {
+                transform: translateY(100vh) rotate(360deg);
+            }
+        }
+
+        @keyframes rising {
+            0% {
+                transform: translateY(10px) translateX(0px);
+                opacity: 0.8;
+            }
+            50% {
+                opacity: 0.4;
+            }
+            100% {
+                transform: translateY(-60px) translateX(calc(20px - 40px * var(--random)));
+                opacity: 0;
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .gallery-item {
+                width: 80px;
+                height: 80px;
+            }
+            
+            .images-gallery {
+                gap: 10px;
+                padding: 10px 5px;
+            }
+            
+            .video-container {
+                width: 95%;
+                padding: 15px;
+                margin: 15px auto;
+            }
+            
+            .nav-buttons-wrapper {
+                gap: 8px;
+            }
+            
+            .nav-button {
+                padding: 10px 18px;
+                font-size: 0.9rem;
+            }
+            
+            h1 {
+                font-size: 1.4rem;
+            }
+            
+            .small-logo {
+                width: 35px;
+                height: 35px;
+                margin-right: 10px;
+            }
+            
+            .video-title {
+                font-size: 1.2rem;
+            }
+            
+            footer {
+                padding: 15px 10px;
+                font-size: 0.8rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .gallery-item {
+                width: 60px;
+                height: 60px;
+            }
+            
+            .small-logo {
+                width: 30px;
+                height: 30px;
+                margin-right: 8px;
+            }
+            
+            h1 {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="snowflake-container" id="snowflake-container"></div>
+    
+    <div class="header-container">
+        <!-- Galería de imágenes en línea horizontal -->
+        <div class="images-gallery">
+            <div class="gallery-item">
+                <img src="niña.jpg" alt="Imagen 1" loading="lazy">
+            </div>
+            <div class="gallery-item">
+                <img src="niña2.jpg" alt="Imagen 2" loading="lazy">
+            </div>
+            <div class="gallery-item">
+                <img src="niña3.jpg" alt="Imagen 3" loading="lazy">
+            </div>
+            <div class="gallery-item">
+                <img src="niña4.jpg" alt="Imagen 4" loading="lazy">
+            </div>
+            <div class="gallery-item">
+                <img src="niño.png" alt="Imagen 5" loading="lazy">
+            </div>
+            <div class="gallery-item">
+                <img src="niña5.jpg" alt="Imagen 6" loading="lazy">
+            </div>
+        </div>
+        
+        <!-- Título movido debajo de las imágenes -->
+        <div class="title-container">
+            <div class="small-logo"></div>
+            <h1>LA VENDEDORA DE FOSFOROS</h1>
+        </div>
+    </div>
+    
+    <div class="content-wrapper">
+        <div class="nav-container">
+            <div class="nav-buttons-wrapper">
+                <a href="index.html"><button class="nav-button active" data-index="0">Panel1</button></a>
+            </div>
+        </div>
+        
+        <div class="video-container active" id="video0">
+            <h2 class="video-title">Panel Interactivo #1</h2>
+            <div class="video-wrapper">
+                <video controls preload="none" poster="/api/placeholder/800/450">
+                    <source src="video1.mp4" type="video/mp4">
+                    Tu navegador no soporta la etiqueta de video.
+                </video>
+            </div>
+        </div>
+        
+        <div class="video-container" id="video1">
+            <h2 class="video-title">Panel Interactivo #2</h2>
+            <div class="video-wrapper">
+                <video controls preload="none" poster="/api/placeholder/800/450">
+                    <source src="video2.mp4" type="video/mp4">
+                    Tu navegador no soporta la etiqueta de video.
+                </video>
+            </div>
+        </div>
+        
+        <div class="video-container" id="video2">
+            <h2 class="video-title">Panel Interactivo #3</h2>
+            <div class="video-wrapper">
+                <video controls preload="none" poster="/api/placeholder/800/450">
+                    <source src="video3.mp4" type="video/mp4">
+                    Tu navegador no soporta la etiqueta de video.
+                </video>
+            </div>
+        </div>
+        
+        <div class="video-container" id="video3">
+            <h2 class="video-title">Panel Interactivo #4</h2>
+            <div class="video-wrapper">
+                <video controls preload="none" poster="/api/placeholder/800/450">
+                    <source src="video4.mp4" type="video/mp4">
+                    Tu navegador no soporta la etiqueta de video.
+                </video>
+            </div>
+        </div>
+        
+        <div class="video-container" id="video4">
+            <h2 class="video-title">Panel Interactivo #5</h2>
+            <div class="video-wrapper">
+                <video controls preload="none" poster="/api/placeholder/800/450">
+                    <source src="video5.mp4" type="video/mp4">
+                    Tu navegador no soporta la etiqueta de video.
+                </video>
+            </div>
+        </div>
+        
+        <div class="video-container" id="video5">
+            <h2 class="video-title">Panel Interactivo #6</h2>
+            <div class="video-wrapper">
+                <video controls preload="none" poster="/api/placeholder/800/450">
+                    <source src="video6.mp4" type="video/mp4">
+                    Tu navegador no soporta la etiqueta de video.
+                </video>
+            </div>
+        </div>
+        
+        <footer>
+            <div class="copyright">© 2025 Mural Interactivo - Todos los derechos reservados</div>
+        </footer>
+    </div>
+    
+    <script>
+        // Usar el DOMContentLoaded para mejorar la carga inicial
+        document.addEventListener('DOMContentLoaded', function() {
+            // Cache de elementos DOM frecuentemente usados
+            const snowflakeContainer = document.getElementById('snowflake-container');
+            const navButtons = document.querySelectorAll('.nav-button');
+            const videoContainers = document.querySelectorAll('.video-container');
+            const videos = document.querySelectorAll('video');
+            
+            // Variables de configuración
+            const maxSnowflakes = window.innerWidth <= 768 ? 40 : 70;
+            let activeSnowflakes = 0;
+            const isMobile = window.innerWidth <= 768;
+            
+            // Delegación de eventos para mejorar rendimiento
+            document.querySelector('.nav-buttons-wrapper').addEventListener('click', function(e) {
+                const button = e.target.closest('.nav-button');
+                if (button) {
+                    const index = button.getAttribute('data-index');
+                    showVideo(parseInt(index));
+                }
+            });
+            
+            // Función simplificada para crear copos de nieve
+            function createSnowflake() {
+                if (activeSnowflakes >= maxSnowflakes) {
+                    return;
+                }
+                
+                // Crear un nuevo copo de nieve
+                const snowflake = document.createElement('div');
+                snowflake.className = 'snowflake';
+                
+                // Posición aleatoria en X
+                const startPositionX = Math.random() * window.innerWidth;
+                
+                // Tamaño aleatorio entre 5px y 12px
+                const size = Math.random() * 7 + 5;
+                
+                // Velocidad aleatoria entre 10s y 25s
+                const duration = Math.random() * 15 + 10;
+                
+                // Aplicar estilos directamente
+                snowflake.style.cssText = `
+                    left: ${startPositionX}px;
+                    width: ${size}px;
+                    height: ${size}px;
+                    animation-duration: ${duration}s;
+                    opacity: ${Math.random() * 0.7 + 0.3};
+                `;
+                
+                // Añadir al contenedor
+                snowflakeContainer.appendChild(snowflake);
+                activeSnowflakes++;
+                
+                // Eliminar el copo después de su animación
+                setTimeout(() => {
+                    if (snowflake.parentNode === snowflakeContainer) {
+                        snowflakeContainer.removeChild(snowflake);
+                        activeSnowflakes--;
+                    }
+                    
+                    // Crear un nuevo copo para mantener la cantidad
+                    createSnowflake();
+                }, duration * 1000);
+            }
+            
+            // Función para crear partículas de fuego simplificada
+            function createFireParticles(element) {
+                const rect = element.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const bottomY = rect.bottom;
+                
+                // Crear partículas en la base del contenedor activo
+                const particleCount = isMobile ? 3 : 5;
+                
+                for (let i = 0; i < particleCount; i++) {
+                    setTimeout(() => {
+                        const particle = document.createElement('div');
+                        particle.className = 'fire-particle';
+                        
+                        // Posición inicial aleatoria en la base del elemento
+                        const offsetX = (Math.random() - 0.5) * rect.width;
+                        
+                        // Variable aleatoria para el movimiento lateral
+                        const random = Math.random();
+                        particle.style.setProperty('--random', random);
+                        
+                        // Tamaño aleatorio
+                        const size = Math.random() * 4 + 3;
+                        
+                        // Velocidad aleatoria
+                        const duration = Math.random() * 2 + 1;
+                        
+                        // Aplicar estilos
+                        particle.style.cssText = `
+                            left: ${centerX + offsetX}px;
+                            top: ${bottomY - 10}px;
+                            width: ${size}px;
+                            height: ${size}px;
+                            animation-duration: ${duration}s;
+                        `;
+                        
+                        document.body.appendChild(particle);
+                        
+                        // Eliminar la partícula después de su animación
+                        setTimeout(() => {
+                            if (particle.parentNode === document.body) {
+                                document.body.removeChild(particle);
+                            }
+                        }, duration * 1000);
+                    }, i * 200);
+                }
+            }
+            
+            // Iniciar la nevada de manera más sencilla
+            function startSnowfall() {
+                // Crear copos iniciales
+                const initialCount = 20;
+                for (let i = 0; i < initialCount; i++) {
+                    setTimeout(createSnowflake, i * 100);
+                }
+                
+                // Agregar más copos periódicamente
+                setInterval(() => {
+                    if (activeSnowflakes < maxSnowflakes) {
+                        createSnowflake();
+                    }
+                }, 300);
+            }
+            
+            // Función para mostrar videos optimizada
+            function showVideo(index) {
+                // Ocultar todos los contenedores
+                videoContainers.forEach(container => {
+                    container.classList.remove('active');
+                });
+                
+                // Desactivar todos los botones
+                navButtons.forEach(button => {
+                    button.classList.remove('active');
+                });
+                
+                // Mostrar el contenedor seleccionado
+                const selectedContainer = videoContainers[index];
+                selectedContainer.classList.add('active');
+                
+                // Activar el botón correspondiente
+                const selectedButton = navButtons[index];
+                selectedButton.classList.add('active');
+                
+                // Crear efecto de partículas de fuego para el contenedor activo
+                createFireParticles(selectedContainer);
+                
+                // Pausar todos los videos para evitar reproducción múltiple
+                videos.forEach(video => {
+                    if (video.parentNode.parentNode !== selectedContainer) {
+                        video.pause();
+                    }
+                });
+                
+                // Cargar el video activo solo cuando se necesita
+                const activeVideo = selectedContainer.querySelector('video');
+                if (activeVideo && activeVideo.getAttribute('preload') === 'none') {
+                    activeVideo.setAttribute('preload', 'metadata');
+                    // Safari necesita un pequeño empujón a veces
+                    setTimeout(() => {
+                        activeVideo.load();
+                    }, 100);
+                }
+            }
+            
+            // Inicializar la página
+            startSnowfall();
+            showVideo(0);
+            
+            // Event listener para responsive
+            window.addEventListener('resize', function() {
+                // No necesitamos hacer nada especial aquí para los copos
+                // ya que se adaptan automáticamente
+            });
+        });
+    </script>
+</body>
+</html>
